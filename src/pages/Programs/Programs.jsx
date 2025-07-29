@@ -16,7 +16,7 @@ export default function Programs() {
 
     const COLORS = ["#4285F4", "#EC4899"];
 
-    // Static trend data 
+    // Static trend data
     const trendData = [
         { year: '2019', value: 4.2 },
         { year: '2020', value: 4.5 },
@@ -175,12 +175,16 @@ export default function Programs() {
             };
         }
 
-        // Calculate total students
-        const totalStudents = filteredEntries.reduce((sum, entry) => {
+        // Calculate total students and out-of-school children
+        const { totalStudents, totalOutOfSchool } = filteredEntries.reduce((acc, entry) => {
             const students = parseInt(entry.totalChildren) || 0;
-            console.log('🔍 [DEBUG] Adding students:', students, 'from entry:', entry.district);
-            return sum + students;
-        }, 0);
+            const outOfSchool = parseInt(entry.outOfSchoolChildren) || 0;
+            console.log('🔍 [DEBUG] Adding students:', students, 'out-of-school:', outOfSchool, 'from entry:', entry.district);
+            return {
+                totalStudents: acc.totalStudents + students,
+                totalOutOfSchool: acc.totalOutOfSchool + outOfSchool
+            };
+        }, { totalStudents: 0, totalOutOfSchool: 0 });
 
         // Calculate average gender percentages
         let totalGirls = 0;
@@ -206,6 +210,7 @@ export default function Programs() {
 
         const statistics = {
             totalStudents,
+            totalOutOfSchool,
             girlsPercentage: avgGirlsPercentage,
             boysPercentage: avgBoysPercentage,
             districts,
@@ -257,7 +262,7 @@ export default function Programs() {
 
             setEntries(entriesData);
 
-          
+
             const uniquePrograms = extractUniquePrograms(entriesData);
             setPrograms(uniquePrograms);
 
@@ -279,26 +284,26 @@ export default function Programs() {
         }
     };
 
-   
+
     useEffect(() => {
         console.log('🚀 [DEBUG] Component mounted, fetching entries...');
-        fetchAllEntries(true); 
+        fetchAllEntries(true);
     }, []);
 
-   
+
     useEffect(() => {
         if (!selectedProgramType && programs.length > 0) {
             setSelectedProgramType(programs[0].type);
         }
     }, [programs, selectedProgramType]);
 
-    
+
     const handleProgramSelect = (programType) => {
         console.log('📌 [DEBUG] Program selected:', programType);
         setSelectedProgramType(programType);
     };
 
-   
+
     const getFilteredData = () => {
         console.log('🔄 [DEBUG] Getting filtered data for program:', selectedProgramType);
         const filteredEntries = filterEntriesByProgram(entries, selectedProgramType);
@@ -341,7 +346,7 @@ export default function Programs() {
                     iconBg="bg-purple-100"
                   />
                   <StatsCard
-                    title="Data Entries"
+                    title="Out of School"
                     value="-"
                     icon={<GraduationCap className="w-6 h-6 text-orange-600" />}
                     bgColor="bg-orange-300"
@@ -406,8 +411,8 @@ export default function Programs() {
                   iconBg="bg-purple-100"
                 />
                 <StatsCard
-                  title="Data Entries"
-                  value={currentData.statistics.entriesCount || 0}
+                  title="Out of School"
+                  value={(currentData.statistics.totalOutOfSchool || 0).toLocaleString()}
                   icon={<GraduationCap className="w-6 h-6 text-orange-600" />}
                   bgColor="bg-orange-300"
                   iconBg="bg-orange-100"
@@ -437,11 +442,11 @@ export default function Programs() {
                                 <p className="text-gray-600 mt-1">Select a program to view detailed analytics and metrics</p>
                             </div>
 
-                            <div className="relative">
+                            <div className="relative w-full md:w-auto">
                                 <select
                                     value={selectedProgramType}
                                     onChange={(e) => handleProgramSelect(e.target.value)}
-                                    className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-64"
+                                    className="w-full md:w-64 appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     disabled={loading}
                                 >
                                     <option value="">Select a Program</option>
@@ -451,7 +456,9 @@ export default function Programs() {
                                         </option>
                                     ))}
                                 </select>
-                                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
+        <ChevronDown className="text-gray-400 w-5 h-5" />
+    </div>
                             </div>
                         </div>
                     </div>
@@ -459,7 +466,7 @@ export default function Programs() {
 
                 {/* Custom Statistics Cards */}
                 <div className="max-w-7xl mx-auto space-y-4 md:space-y-6 pb-4">
-              
+
                     <ProgramStatsCards />
                 </div>
 
@@ -539,7 +546,7 @@ export default function Programs() {
                 </div>
 
 
-              
+
                 <div className="flex flex-col md:flex-row gap-4 md:gap-6 bg-white rounded-lg p-4 md:p-6 shadow-sm border border-gray-100 mt-4">
                     <div className="bg-[#F8FAFC] rounded-lg p-4 shadow border border-blue-100 w-full md:w-1/2 flex flex-col items-center">
                         <div className="flex items-center justify-between w-full mb-4">
@@ -584,7 +591,7 @@ export default function Programs() {
                     </div>
 
                     <div className="flex flex-col items-center justify-center w-full md:w-1/2 space-y-2 pt-4">
-                       
+
 
                         <button
                             className="text-black text-sm font-medium bg-transparent border border-gray-500 px-4 py-2 rounded-lg w-full transition-colors duration-200 hover:bg-gray-50"

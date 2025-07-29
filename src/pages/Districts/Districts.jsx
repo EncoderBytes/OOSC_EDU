@@ -10,6 +10,8 @@ export default function DistrictsPage() {
   const [allEntries, setAllEntries] = useState([]);
   const [filteredEntries, setFilteredEntries] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [tehsils, setTehsils] = useState([]);
+  const [selectedTehsil, setSelectedTehsil] = useState("");
 
   // Static trend data (remains unchanged)
   const trendData = [
@@ -29,20 +31,35 @@ export default function DistrictsPage() {
           ? response.data
           : (response.data?.entries || response.data?.data || []);
         setAllEntries(data);
-        if (data.length > 0 && !selectedDistrict) {
-          setSelectedDistrict(data[0].district || "");
-        }
+        // No default district selection to allow "All Districts" to be the default
       })
       .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
-    if (!selectedDistrict) {
-      setFilteredEntries(allEntries);
+    if (selectedDistrict) {
+      const districtTehsils = [...new Set(allEntries
+        .filter(e => e.district === selectedDistrict)
+        .map(e => e.tehsil)
+        .filter(t => t))
+      ];
+      setTehsils(districtTehsils);
+      setSelectedTehsil(""); // Reset tehsil when district changes
     } else {
-      setFilteredEntries(allEntries.filter(e => e.district === selectedDistrict));
+      setTehsils([]);
     }
   }, [selectedDistrict, allEntries]);
+
+  useEffect(() => {
+    let entries = allEntries;
+    if (selectedDistrict) {
+      entries = entries.filter(e => e.district === selectedDistrict);
+    }
+    if (selectedTehsil) {
+      entries = entries.filter(e => e.tehsil === selectedTehsil);
+    }
+    setFilteredEntries(entries);
+  }, [selectedDistrict, selectedTehsil, allEntries]);
 
   // Dynamic Dropout Reasons Data
   const enrollmentsData = [
@@ -69,62 +86,122 @@ export default function DistrictsPage() {
   ];
   const COLORS = ["#EC4899", "#4285F4"];
 
+  // Calculate OOSC by Tehsil and Level
+  const ooscByTehsilAndLevel = filteredEntries.reduce((acc, entry) => {
+    const { tehsil, level, outOfSchoolChildren } = entry;
+    if (tehsil && level) {
+      if (!acc[tehsil]) {
+        acc[tehsil] = {};
+      }
+      if (!acc[tehsil][level]) {
+        acc[tehsil][level] = 0;
+      }
+      acc[tehsil][level] += Number(outOfSchoolChildren) || 0;
+    }
+    return acc;
+  }, {});
+
   return (
         <>
             <div className="p-4 md:p-6 bg-[#F8F9FA]">
                 <div className="max-w-7xl mx-auto mb-6">
-  <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 md:p-6">
-    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Districts Dashboard</h1>
-        <p className="text-gray-600 mt-1">Select a district to view detailed analytics and metrics</p>
+  <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 sm:p-4 md:p-6">
+    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className="flex-1">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Districts Dashboard</h1>
+        <p className="text-gray-600 mt-1 text-sm sm:text-base">Select a district to view detailed analytics and metrics</p>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 text-xs sm:text-sm mt-2">
+          <h1 className="underline">District: {selectedDistrict || 'All'}</h1>
+          <h1 className="underline">Tehsil: {selectedTehsil || 'All'}</h1>
+        </div>
       </div>
-      <div className="relative">
-        <select
-          value={selectedDistrict}
-          onChange={e => setSelectedDistrict(e.target.value)}
-          className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-64"
-          disabled={loading}
-        >
-          {Array.from(new Set(allEntries.map(e => e.district).filter(Boolean))).map(d => (
-            <option key={d} value={d}>{d}</option>
-          ))}
-        </select>
-        <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
+        <div className="relative w-full sm:w-auto">
+          <select
+            value={selectedDistrict}
+            onChange={e => setSelectedDistrict(e.target.value)}
+            className="appearance-none bg-white border border-gray-300 rounded-lg px-3 sm:px-4 py-2 pr-8 sm:pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:min-w-48 md:min-w-56 lg:min-w-64 text-sm sm:text-base"
+            disabled={loading}
+          >
+            <option value="">All Districts</option>
+            {[...new Set(allEntries.map(e => e.district).filter(Boolean))].map(district => (
+              <option key={district} value={district}>{district}</option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 pointer-events-none" />
+        </div>
+
+        <div className="relative w-full sm:w-auto">
+          <select
+            value={selectedTehsil}
+            onChange={e => setSelectedTehsil(e.target.value)}
+            className="appearance-none bg-white border border-gray-300 rounded-lg px-3 sm:px-4 py-2 pr-8 sm:pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:min-w-48 md:min-w-56 lg:min-w-64 text-sm sm:text-base"
+            disabled={loading || !selectedDistrict}
+          >
+            <option value="">All Tehsils</option>
+            {tehsils.map(tehsil => (
+              <option key={tehsil} value={tehsil}>{tehsil}</option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 pointer-events-none" />
+        </div>
       </div>
     </div>
   </div>
   <div className="mt-4">
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-  <StatsCard title="Total Children" value={(() => {
-    let total = 0;
-    filteredEntries.forEach(e => { total += Number(e.totalChildren) || 0; });
-    return total;
-  })()} icon={<Users className="w-6 h-6 text-green-600" />} bgColor={"bg-[#4A90E2]"} iconBg={"bg-[#e8f0fe]"} />
-  <StatsCard title="Programs" value={filteredEntries.length} icon={<Target className="w-6 h-6 text-blue-600" />} />
-  <StatsCard title="Dropout %" value={(() => {
-    let total = 0, dropout = 0;
-    filteredEntries.forEach(e => {
-      total += Number(e.totalChildren) || 0;
-      dropout += Number(e.outOfSchoolChildren) || 0;
-    });
-    return total > 0 ? ((dropout / total) * 100).toFixed(1) + '%' : '0%';
-  })()} icon={<ArrowBigDownIcon className="w-6 h-6 text-red-600" />} bgColor={"bg-[#E1F5FE]"} iconBg={"bg-[#e0f7fa]"} />
-  <StatsCard title="Girls %" value={(() => {
-    let total = 0, girls = 0;
-    filteredEntries.forEach(e => {
-      const children = Number(e.totalChildren) || 0;
-      const girlsPercent = Number(e.girlsPercentage) || 0;
-      girls += (girlsPercent / 100) * children;
-      total += children;
-    });
-    return total > 0 ? ((girls / total) * 100).toFixed(1) + '%' : '0%';
-  })()} icon={<PersonStandingIcon className="w-6 h-6 text-red-600" />} bgColor={"bg-[#F5F5F5]"} iconBg={"bg-[#fce4ec]"} />
-</div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <StatsCard
+        title="Total Children"
+        value={(() => {
+          let total = 0;
+          filteredEntries.forEach(e => { total += Number(e.totalChildren) || 0; });
+          return total;
+        })()}
+        icon={<Users className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />}
+        bgColor={"bg-[#4A90E2]"}
+        iconBg={"bg-[#e8f0fe]"}
+      />
+      <StatsCard
+        title="Programs"
+        value={filteredEntries.length}
+        icon={<Target className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />}
+      />
+      <StatsCard
+        title="Dropout %"
+        value={(() => {
+          let total = 0, dropout = 0;
+          filteredEntries.forEach(e => {
+            total += Number(e.totalChildren) || 0;
+            dropout += Number(e.outOfSchoolChildren) || 0;
+          });
+          return total > 0 ? ((dropout / total) * 100).toFixed(1) + '%' : '0%';
+        })()}
+        icon={<ArrowBigDownIcon className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />}
+        bgColor={"bg-[#E1F5FE]"}
+        iconBg={"bg-[#e0f7fa]"}
+      />
+      <StatsCard
+        title="Girls %"
+        value={(() => {
+          let total = 0, girls = 0;
+          filteredEntries.forEach(e => {
+            const children = Number(e.totalChildren) || 0;
+            const girlsPercent = Number(e.girlsPercentage) || 0;
+            girls += (girlsPercent / 100) * children;
+            total += children;
+          });
+          return total > 0 ? ((girls / total) * 100).toFixed(1) + '%' : '0%';
+        })()}
+        icon={<PersonStandingIcon className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />}
+        bgColor={"bg-[#F5F5F5]"}
+        iconBg={"bg-[#fce4ec]"}
+      />
+    </div>
   </div>
 </div>
 
-  <div className="grid md:grid-cols-2 gap-4 md:gap-6 sm:grid-cols-1">
+
+  <div className="grid md:grid-cols-2 gap-4 md:gap-6 sm:grid-cols-1 mt-6">
      <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm border border-gray-100">
                          <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-4 md:mb-6">Dropout Reasons - {selectedDistrict}</h3>
 

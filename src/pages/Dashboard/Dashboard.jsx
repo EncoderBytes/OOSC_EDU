@@ -8,6 +8,8 @@ import Programs from '../Programs/Programs'
 import DistrictsPage from '../Districts/Districts'
 import Reports from '../Reports/Reports'
 import Users from '../Users/Users'
+import Map from '../Map/Map'
+import Calculator from '../Calculator/Calculator'
 
 const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -40,11 +42,13 @@ const Dashboard = () => {
             <Route path="/" element={<MainContent />} />
             <Route path="/overview" element={<MainContent />} />
             <Route path="/districts" element={<DistrictsPage />} />
+            <Route path="/map" element={<Map />} />
             <Route path="/data-management" element={<DataManagement />} />
             <Route path="/programs" element={<Programs />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/users" element={<Users />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/calculator" element={<Calculator />} />
           </Routes>
         </div>
       </div>

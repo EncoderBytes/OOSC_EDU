@@ -5,9 +5,11 @@ import {
   Database,
   Users,
   MapPin,
+  Map,
   FileText,
   LogOut,
-  X
+  X,
+  Calculator
 } from 'lucide-react'
 import istock from "../assets/Logo/istock.png"
 
@@ -20,8 +22,10 @@ const Sidebar = ({ isOpen, onClose, onNavigate }) => {
     { icon: Database, label: 'Data Management', path: '/dashboard/data-management' },
     { icon: Users, label: 'Programs', path: '/dashboard/programs' },
     { icon: MapPin, label: 'Districts', path: '/dashboard/districts' },
+    { icon: Map, label: 'Map', path: '/dashboard/map' },
     { icon: FileText, label: 'Reports', path: '/dashboard/reports' },
     { icon: Users, label: 'Users', path: '/dashboard/users' },
+    { icon: Calculator, label: 'Calculator', path: '/dashboard/calculator' },
   ]
 
   const handleLogout = () => {
@@ -64,7 +68,7 @@ const Sidebar = ({ isOpen, onClose, onNavigate }) => {
               <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
                 <span className="text-[#2c5aa0] font-bold text-sm"><img src={istock} alt="logo" /></span>
               </div>
-              <span className="font-medium text-sm">OOSC Edu App Track</span>
+              <span className="font-medium text-sm"> KP-NCLB </span>
             </div>
             {/* Close button for mobile only */}
             <button
