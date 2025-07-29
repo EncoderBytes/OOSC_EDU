@@ -133,6 +133,7 @@ function BottomSection({ filteredData = [], loading = false }) {
               <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
               <span className="text-gray-600">Loading dropout data...</span>
             </div>
+            
           </div>
           <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm border border-gray-100">
             <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-4 md:mb-6">Activity</h3>
